@@ -5,17 +5,15 @@ class RouteMatch {
   Map<String, String> params;
   String path;
   RouteMeta meta;
-  HttpRequest req;
   empty() {
     query = {};
     params = {};
     path = '';
     meta = null;
-    req = null;
   }
 }
 
-typedef Future<Null> RouterCallback(RouteMatch match, [Map meta]);
+typedef Future<Null> RouterCallback(HttpRequest req, RouteMatch match, Map meta);
 
 class RouteMeta {
   String path;
@@ -81,13 +79,14 @@ class Router {
     return this;
   }
 
-  void exec(String path, [Map meta]) {
+  Future<bool> exec(HttpRequest req, [Map meta]) async {
     for (var item in config) {
-      var matcher = item.exec(path, this.matcher);
+      RouteMatch matcher = item.exec(req.requestedUri.path, this.matcher);
       if (matcher != null) {
-        item.callback(matcher, meta);
-        return matcher;
+        await item.callback(req, matcher, meta);
+        return true;
       }
     }
+    return false;
   }
 }

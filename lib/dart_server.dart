@@ -10,10 +10,8 @@ Future main(List<String> args) async {
   );
 
   var router = {
-    '/job/:id': (RouteMatch match, Map data) async {
-      print(match.path);
-      print(match.req.uri);
-      match.req.response.writeln('good job ${match.params['id']}');
+    '/job/:id': (HttpRequest req, RouteMatch match, Map data) async {
+      req.response.writeln('good job ${match.params['id']}');
     }
   };
 
@@ -29,14 +27,8 @@ Future main(List<String> args) async {
 Function handleRoute(Map _router) {
   var router = Router(config: _router);
   return (HttpRequest req, Map data) async {
-    var path = req.requestedUri.path;
-    for (var item in router.config) {
-      RouteMatch matcher = item.exec(path, router.matcher);
-      if (matcher != null) {
-        matcher.req = req;
-        data['defaultHandle'] = false;
-        await item.callback(matcher, data);
-      }
+    if(await router.exec(req, data)){
+      data['defaultHandle'] = false;
     }
     await data['next']();
   };
@@ -44,8 +36,8 @@ Function handleRoute(Map _router) {
 
 void log(HttpRequest req, data) async {
     await data['next']();
-    print(data['defaultHandle']);
     if (data['defaultHandle']) {
+      req.response.statusCode = HttpStatus.notFound;
       req.response.write('404 not found');
     }
     print('[${req.method}] ${req.requestedUri} ${req.response.statusCode}');
