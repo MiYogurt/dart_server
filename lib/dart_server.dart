@@ -3,6 +3,16 @@ import 'dart:async';
 import 'compose.dart';
 import 'router.dart';
 import 'context.dart';
+import 'render.dart';
+
+String Page(String child) {
+  return html([
+    title('hello my server'),
+    body(
+      child
+    )
+  ]);
+}
 
 Future main(List<String> args) async {
   var server  = await HttpServer.bind(
@@ -12,7 +22,8 @@ Future main(List<String> args) async {
 
   var router = {
     '/job/:id': (HttpRequest req, RouteMatch match, Context ctx) async {
-      req.response.writeln('good job ${match.params['id']}');
+      req.response.headers.contentType =ContentType.html;
+      req.response.writeln(Page('hello ${match.params['id']}'));
     }
   };
 

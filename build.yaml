@@ -1,0 +1,14 @@
+builders:
+  build_render_tag_h:
+    import: "package:dart_server/view_builder.dart"
+    builder_factories: ["renderTagFn"]
+    build_extensions: {".dart": [".g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    
+targets:
+  $default:
+    builders:
+      dart_server|build_render_tag_h:
+        generate_for:
+            - lib/render.dart
