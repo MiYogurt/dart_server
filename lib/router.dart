@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'context.dart';
 
 class RouteMatch {
   Map<String, String> query;
@@ -13,7 +14,7 @@ class RouteMatch {
   }
 }
 
-typedef Future<Null> RouterCallback(HttpRequest req, RouteMatch match, Map meta);
+typedef Future<Null> RouterCallback(HttpRequest req, RouteMatch match, Context meta);
 
 class RouteMeta {
   String path;
@@ -79,11 +80,11 @@ class Router {
     return this;
   }
 
-  Future<bool> exec(HttpRequest req, [Map meta]) async {
+  Future<bool> exec(HttpRequest req, [Context ctx]) async {
     for (var item in config) {
       RouteMatch matcher = item.exec(req.requestedUri.path, this.matcher);
       if (matcher != null) {
-        await item.callback(req, matcher, meta);
+        await item.callback(req, matcher, ctx);
         return true;
       }
     }
