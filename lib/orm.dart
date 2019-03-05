@@ -58,10 +58,26 @@ abstract class Model {
     }).join(',');
     var sql = """
       insert into app_${getSymbolName(cls.simpleName)} ($fields)
-        values ($values)
+        values ($values) returning "id", ${keys.map((k) => "\"$k\"").join(',')}
     """;
     print(sql);
-    return connection.execute(sql);
+    var results = await connection.query(sql);
+    syncDataToModel(attrsMap.keys.toList(), results.first, reflect(this));
+  }
+  
+  update() async {
+    var data = reflect(this);
+    ClassMirror cls = data.type;
+    var attrsMap = getAttrsMap(cls);
+    var keys = attrsMap.keys.skipWhile((k) => k == 'id');
+    var values = keys.map((k){
+      return "$k=\'${data.getField(Symbol(k)).reflectee}\'";
+    }).join(',');
+    var sql = """
+      update app_${getSymbolName(cls.simpleName)} set $values where id=${data.getField(#id).reflectee}
+    """;
+    print(sql);
+    return await connection.query(sql);
   }
 
   delete() async {
@@ -70,6 +86,7 @@ abstract class Model {
     var sql = "delete from app_${getSymbolName(cls.simpleName)} where id = @id";
     return connection.execute(sql, substitutionValues: {"id": data.getField(#id).reflectee});
   }
+
 
   static Future<T> findById<T>(id) async {
     var cls = reflectClass(T);
@@ -84,9 +101,7 @@ abstract class Model {
     var data = list.first;
     if (data.isNotEmpty) {
       var model = cls.newInstance(Symbol(''), []);
-      for (var i = 0; i < data.length; i++) {
-        model.setField(Symbol(keys[i]), data[i]);
-      }
+      syncDataToModel(keys, data, model);
       return model.reflectee as T;
     }
     return null;
@@ -110,6 +125,12 @@ String getSymbolName(Symbol symbol){
   return RegExp(r'Symbol\(\"(.*)\"\)$').firstMatch(symbol.toString()).group(1);
 }
 
+syncDataToModel(List keys, List datas, InstanceMirror model) {
+  for (var i = 0; i < datas.length; i++) {
+      model.setField(Symbol(keys[i]), datas[i]);
+    }
+}
+
 
 main(List<String> args) async {
   await init();
@@ -117,9 +138,16 @@ main(List<String> args) async {
   // var u = User();
   // u.username = 'hello';
   // var ret = u.save();
-  var user = await Model.findById<User>(1);
-  print(user);
+  var user = User();
+  user.username = 'h1';
+  await user.save();
   print(user.username);
-  await user.delete();
+  user.username = "h2";
+  await user.update();
+  print(user.username);
+
+  // print(user);
+  // print(user.username);
+  // await user.delete();
 }
 
