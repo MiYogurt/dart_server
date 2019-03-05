@@ -63,6 +63,34 @@ abstract class Model {
     print(sql);
     return connection.execute(sql);
   }
+
+  delete() async {
+    var data = reflect(this);
+    ClassMirror cls = data.type;
+    var sql = "delete from app_${getSymbolName(cls.simpleName)} where id = @id";
+    return connection.execute(sql, substitutionValues: {"id": data.getField(#id).reflectee});
+  }
+
+  static Future<T> findById<T>(id) async {
+    var cls = reflectClass(T);
+    var attrsMap = getAttrsMap(cls);
+    var keys = attrsMap.keys.toList();
+    var fieldsString = keys.join(',');
+    var sql = "select $fieldsString from app_${getSymbolName(cls.simpleName)} where id=$id";
+    var list = await connection.query(sql);
+    if (list.isEmpty) {
+      return null;
+    }
+    var data = list.first;
+    if (data.isNotEmpty) {
+      var model = cls.newInstance(Symbol(''), []);
+      for (var i = 0; i < data.length; i++) {
+        model.setField(Symbol(keys[i]), data[i]);
+      }
+      return model.reflectee as T;
+    }
+    return null;
+  }
 }
 
 class Type{
@@ -85,10 +113,13 @@ String getSymbolName(Symbol symbol){
 
 main(List<String> args) async {
   await init();
-  await Model.createTable<User>();
-  var u = User();
-  u.username = 'hello';
-  var ret = u.save();
-  print(ret);
+  // await Model.createTable<User>();
+  // var u = User();
+  // u.username = 'hello';
+  // var ret = u.save();
+  var user = await Model.findById<User>(1);
+  print(user);
+  print(user.username);
+  await user.delete();
 }
 
