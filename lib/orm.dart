@@ -45,7 +45,13 @@ abstract class Model {
     var data = reflect(this);
     ClassMirror cls = data.type;
     var attrsMap = getAttrsMap(cls);
-    var keys = attrsMap.keys;
+    var keys = attrsMap.keys.skipWhile((k){
+      if (data.getField(#id)?.reflectee == null) {
+        return k == 'id';
+      }
+      return false;
+    });
+    print(keys);
     var fields = keys.join(',');
     var values = keys.map((k){
       return "\'${data.getField(Symbol(k)).reflectee}\'";
@@ -54,6 +60,7 @@ abstract class Model {
       insert into app_${getSymbolName(cls.simpleName)} ($fields)
         values ($values)
     """;
+    print(sql);
     return connection.execute(sql);
   }
 }
@@ -64,6 +71,9 @@ class Type{
 }
 
 class User extends Model {
+  @Type('serial primary key')
+  int id;
+
   @Type('varchar(255)')
   String username;
 }
@@ -75,6 +85,7 @@ String getSymbolName(Symbol symbol){
 
 main(List<String> args) async {
   await init();
+  await Model.createTable<User>();
   var u = User();
   u.username = 'hello';
   var ret = u.save();
