@@ -27,8 +27,10 @@ abstract class Model {
     print(sql);
     return await connection.execute(sql);
   }
-  static Map<String, String> getAttrsMap<T>() {
-    var cls = reflectClass(T);
+  static Map<String, String> getAttrsMap<T>([ClassMirror cls]) {
+    if (cls == null) {
+      cls = reflectClass(T);
+    }
     Map<String, String> attrsMap = {};
     cls.declarations.forEach((symbol, decl){
       if (symbol == cls.simpleName) {
@@ -37,6 +39,22 @@ abstract class Model {
       attrsMap[getSymbolName(symbol)] = decl.metadata.single.getField(#type).reflectee;
     });
     return attrsMap;
+  }
+
+  save() async {
+    var data = reflect(this);
+    ClassMirror cls = data.type;
+    var attrsMap = getAttrsMap(cls);
+    var keys = attrsMap.keys;
+    var fields = keys.join(',');
+    var values = keys.map((k){
+      return "\'${data.getField(Symbol(k)).reflectee}\'";
+    }).join(',');
+    var sql = """
+      insert into app_${getSymbolName(cls.simpleName)} ($fields)
+        values ($values)
+    """;
+    return connection.execute(sql);
   }
 }
 
@@ -57,7 +75,9 @@ String getSymbolName(Symbol symbol){
 
 main(List<String> args) async {
   await init();
-  var sql = await Model.createTable<User>();
-  print(sql);
+  var u = User();
+  u.username = 'hello';
+  var ret = u.save();
+  print(ret);
 }
 
