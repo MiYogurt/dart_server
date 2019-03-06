@@ -1,0 +1,23 @@
+{
+  "@@last_modified": "2019-03-06T12:56:34.976342",
+  "hello": "Hello, {yourName}",
+  "@hello": {
+    "description": "Say hello",
+    "type": "text",
+    "placeholders": {
+      "yourName": {
+        "example": "Sparky"
+      }
+    }
+  },
+  "good": "{some,plural, =0{is zeore {some}}=1{is one {some}}=2{is two {some}}other{is other {some}}}",
+  "@good": {
+    "description": "is good some func",
+    "type": "text",
+    "placeholders": {
+      "some": {
+        "example": 1
+      }
+    }
+  }
+}

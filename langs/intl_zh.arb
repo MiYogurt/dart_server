@@ -1,0 +1,22 @@
+{
+  "hello": "你号 {yourName}",
+  "@hello": {
+    "description": "Say hello",
+    "type": "text",
+    "placeholders": {
+      "yourName": {
+        "example": "Sparky"
+      }
+    }
+  },
+  "good": "{some, plural, =0 {是0  {some}} =1 {是一个 {some}} =2 {是两个 {some}} other {其他 {some}}}",
+  "@good": {
+    "description": "is good some func",
+    "type": "text",
+    "placeholders": {
+      "some": {
+        "example": "1"
+      }
+    }
+  }
+}
