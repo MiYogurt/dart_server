@@ -48,7 +48,7 @@ abstract class Model {
     var data = reflect(this);
     ClassMirror cls = data.type;
     var attrsMap = getAttrsMap(cls);
-    var keys = attrsMap.keys.skipWhile((k){
+    var keys = attrsMap.keys.where((k){
       if (data.getField(#id)?.reflectee == null) {
         return k == 'id';
       }
@@ -70,7 +70,7 @@ abstract class Model {
     var data = reflect(this);
     ClassMirror cls = data.type;
     var attrsMap = getAttrsMap(cls);
-    var keys = attrsMap.keys.skipWhile((k) => k == 'id');
+    var keys = attrsMap.keys.where((k) => k == 'id');
     var values = getValues(keys.toList(), data);
     var sql = """
       update app_${getSymbolName(cls.simpleName)} set $values where id=${data.getField(#id).reflectee}
